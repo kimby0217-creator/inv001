@@ -85,6 +85,37 @@ app.get('/api/shortage', (req, res) => {
     });
 });
 
+// 품명으로 재고 검색
+app.get('/api/inventory/search', (req, res) => {
+    const { name } = req.query;
+
+    if (!name) {
+        return res.status(400).json({ message: '품명을 입력해주세요.' });
+    }
+
+    const sql = `
+        SELECT 
+            product_name,
+            SUM(required_quantity) AS required_quantity,
+            SUM(stock_quantity) AS stock_quantity
+        FROM inventory
+        WHERE product_name = ?
+        GROUP BY product_name
+    `;
+
+    db.get(sql, [name], (err, row) => {
+        if (err) {
+            return res.status(500).json({ message: '데이터 조회 실패', error: err.message });
+        }
+
+        if (!row) {
+            return res.status(404).json({ message: '해당 품목을 찾을 수 없습니다.' });
+        }
+
+        res.json(row);
+    });
+});
+
 // 품목 삭제
 app.delete('/api/inventory/:id', (req, res) => {
     const { id } = req.params;

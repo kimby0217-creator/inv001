@@ -7,6 +7,9 @@ const checkShortageBtn = document.getElementById('checkShortage');
 const shortageList = document.getElementById('shortageList');
 const shortageItems = document.getElementById('shortageItems');
 const allItems = document.getElementById('allItems');
+const searchNameInput = document.getElementById('searchName');
+const searchButton = document.getElementById('searchButton');
+const searchResult = document.getElementById('searchResult');
 
 // 폼 제출 이벤트
 inventoryForm.addEventListener('submit', async (e) => {
@@ -39,6 +42,31 @@ inventoryForm.addEventListener('submit', async (e) => {
         alert('오류가 발생했습니다: ' + error.message);
     }
 });
+
+// 품명 검색 버튼 이벤트
+if (searchButton) {
+    searchButton.addEventListener('click', async () => {
+        const name = searchNameInput.value.trim();
+
+        if (!name) {
+            alert('품명을 입력해주세요.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/inventory/search?name=${encodeURIComponent(name)}`);
+            const data = await response.json();
+
+            if (response.ok) {
+                displaySearchResult(data);
+            } else {
+                searchResult.innerHTML = `<p class="text-muted">${data.message || '해당 품목을 찾을 수 없습니다.'}</p>`;
+            }
+        } catch (error) {
+            alert('오류가 발생했습니다: ' + error.message);
+        }
+    });
+}
 
 // 재고 파악 버튼 이벤트
 checkShortageBtn.addEventListener('click', async () => {
@@ -79,6 +107,15 @@ function displayShortageItems(items) {
     }
     
     shortageList.style.display = 'block';
+}
+
+// 검색 결과 표시
+function displaySearchResult(item) {
+    searchResult.innerHTML = `
+        <div class="alert alert-info mb-0">
+            재고량: <strong>${item.stock_quantity}</strong>
+        </div>
+    `;
 }
 
 // 전체 품목 로드
